@@ -134,6 +134,43 @@ func (c *Client) UpdateAgent(ctx context.Context, agentID string, agent *Agent) 
 	return err
 }
 
+type VoiceSettings struct {
+	Stability        float64 `json:"stability"`
+	SimilarityBoost  float64 `json:"similarity_boost"`
+	Style            float64 `json:"style"`
+	UseSpeakerBoost  bool    `json:"use_speaker_boost"`
+	Speed            float64 `json:"speed"`
+}
+
+func (c *Client) GetVoiceSettings(ctx context.Context, voiceID string) (*VoiceSettings, error) {
+	req, err := c.newRequest(ctx, "GET", fmt.Sprintf("%s/voices/%s/settings", apiBaseURLV1, voiceID), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	var settings VoiceSettings
+	resp, err := c.do(req, &settings)
+	if err != nil {
+		return nil, err
+	}
+
+	if resp.StatusCode == http.StatusNotFound {
+		return nil, nil
+	}
+
+	return &settings, nil
+}
+
+func (c *Client) UpdateVoiceSettings(ctx context.Context, voiceID string, settings *VoiceSettings) error {
+	req, err := c.newRequest(ctx, "POST", fmt.Sprintf("%s/voices/%s/settings/edit", apiBaseURLV1, voiceID), settings)
+	if err != nil {
+		return err
+	}
+
+	_, err = c.do(req, nil)
+	return err
+}
+
 const (
 	apiBaseURLV1 = "https://api.elevenlabs.io/v1"
 	apiBaseURLV2 = "https://api.elevenlabs.io/v2"
