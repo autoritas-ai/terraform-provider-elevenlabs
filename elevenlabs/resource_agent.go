@@ -171,7 +171,7 @@ func resourceAgentUpdate(ctx context.Context, d *schema.ResourceData, m interfac
 	return resourceAgentRead(ctx, d, m)
 }
 
-func resourceAgentDelete(ctx context.-`
+func resourceAgentDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	client := m.(*Client)
 	agentID := d.Id()
 
