@@ -24,7 +24,9 @@ func Provider() *schema.Provider {
 			"elevenlabs_voice":                   resourceVoice(),
 			"elevenlabs_voice_settings":          resourceVoiceSettings(),
 		},
-		DataSourcesMap:       map[string]*schema.Resource{},
+		DataSourcesMap: map[string]*schema.Resource{
+			"elevenlabs_voices": dataSourceVoices(),
+		},
 		ConfigureContextFunc: providerConfigure,
 	}
 }

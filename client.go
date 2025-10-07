@@ -9,6 +9,7 @@ import (
 	"io/ioutil"
 	"mime/multipart"
 	"net/http"
+	"net/url"
 	"os"
 	"path/filepath"
 	"time"
@@ -132,6 +133,52 @@ func (c *Client) UpdateAgent(ctx context.Context, agentID string, agent *Agent) 
 
 	_, err = c.do(req, nil)
 	return err
+}
+
+type SearchVoicesParams struct {
+	Search        string
+	Sort          string
+	SortDirection string
+	VoiceType     string
+	Category      string
+}
+
+func (c *Client) SearchVoices(ctx context.Context, params *SearchVoicesParams) (*GetVoicesV2ResponseModel, error) {
+	u, err := url.Parse(fmt.Sprintf("%s/voices", apiBaseURLV2))
+	if err != nil {
+		return nil, err
+	}
+
+	q := u.Query()
+	if params.Search != "" {
+		q.Set("search", params.Search)
+	}
+	if params.Sort != "" {
+		q.Set("sort", params.Sort)
+	}
+	if params.SortDirection != "" {
+		q.Set("sort_direction", params.SortDirection)
+	}
+	if params.VoiceType != "" {
+		q.Set("voice_type", params.VoiceType)
+	}
+	if params.Category != "" {
+		q.Set("category", params.Category)
+	}
+	u.RawQuery = q.Encode()
+
+	req, err := c.newRequest(ctx, "GET", u.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	var resp GetVoicesV2ResponseModel
+	_, err = c.do(req, &resp)
+	if err != nil {
+		return nil, err
+	}
+
+	return &resp, nil
 }
 
 type VoiceSettings struct {
