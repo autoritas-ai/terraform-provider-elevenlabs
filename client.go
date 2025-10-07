@@ -14,7 +14,7 @@ import (
 	"time"
 )
 
-const apiBaseURL = "https://api.elevenlabs.io/v1/convai"
+const apiBaseURLAgents = "https://api.elevenlabs.io/v1/convai"
 
 type Client struct {
 	apiKey     string
@@ -93,7 +93,7 @@ type PromptConfig struct {
 }
 
 func (c *Client) CreateAgent(ctx context.Context, agent *Agent) (*Agent, error) {
-	req, err := c.newRequest(ctx, "POST", fmt.Sprintf("%s/agents/create", apiBaseURL), agent)
+	req, err := c.newRequest(ctx, "POST", fmt.Sprintf("%s/agents/create", apiBaseURLAgents), agent)
 	if err != nil {
 		return nil, err
 	}
@@ -107,7 +107,7 @@ func (c *Client) CreateAgent(ctx context.Context, agent *Agent) (*Agent, error) 
 }
 
 func (c *Client) GetAgent(ctx context.Context, agentID string) (*Agent, error) {
-	req, err := c.newRequest(ctx, "GET", fmt.Sprintf("%s/agents/%s", apiBaseURL, agentID), nil)
+	req, err := c.newRequest(ctx, "GET", fmt.Sprintf("%s/agents/%s", apiBaseURLAgents, agentID), nil)
 	if err != nil {
 		return nil, err
 	}
@@ -125,7 +125,115 @@ func (c *Client) GetAgent(ctx context.Context, agentID string) (*Agent, error) {
 }
 
 func (c *Client) UpdateAgent(ctx context.Context, agentID string, agent *Agent) error {
-	req, err := c.newRequest(ctx, "PUT", fmt.Sprintf("%s/agents/%s/update", apiBaseURL, agentID), agent)
+	req, err := c.newRequest(ctx, "PUT", fmt.Sprintf("%s/agents/%s/update", apiBaseURLAgents, agentID), agent)
+	if err != nil {
+		return err
+	}
+
+	_, err = c.do(req, nil)
+	return err
+}
+
+const (
+	apiBaseURLV1 = "https://api.elevenlabs.io/v1"
+	apiBaseURLV2 = "https://api.elevenlabs.io/v2"
+)
+
+type CreateVoiceResponse struct {
+	VoiceID string `json:"voice_id"`
+}
+
+type VoiceResponseModel struct {
+	VoiceID     string            `json:"voice_id"`
+	Name        string            `json:"name"`
+	Description string            `json:"description,omitempty"`
+	Labels      map[string]string `json:"labels,omitempty"`
+}
+
+type GetVoicesV2ResponseModel struct {
+	Voices []VoiceResponseModel `json:"voices"`
+}
+
+func (c *Client) CreateVoice(ctx context.Context, name, description string, labels map[string]string, filePaths []string) (*CreateVoiceResponse, error) {
+	body := &bytes.Buffer{}
+	writer := multipart.NewWriter(body)
+
+	for _, path := range filePaths {
+		file, err := os.Open(path)
+		if err != nil {
+			return nil, fmt.Errorf("error opening file %s: %w", path, err)
+		}
+		defer file.Close()
+
+		part, err := writer.CreateFormFile("files", filepath.Base(path))
+		if err != nil {
+			return nil, fmt.Errorf("error creating form file for %s: %w", path, err)
+		}
+		_, err = io.Copy(part, file)
+		if err != nil {
+			return nil, fmt.Errorf("error copying file content for %s: %w", path, err)
+		}
+	}
+
+	writer.WriteField("name", name)
+	if description != "" {
+		writer.WriteField("description", description)
+	}
+	if len(labels) > 0 {
+		labelsJSON, err := json.Marshal(labels)
+		if err != nil {
+			return nil, fmt.Errorf("error marshalling labels to JSON: %w", err)
+		}
+		writer.WriteField("labels", string(labelsJSON))
+	}
+
+	err := writer.Close()
+	if err != nil {
+		return nil, fmt.Errorf("error closing multipart writer: %w", err)
+	}
+
+	req, err := http.NewRequestWithContext(ctx, "POST", fmt.Sprintf("%s/voices/add", apiBaseURLV1), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Set("Content-Type", writer.FormDataContentType())
+	req.Header.Set("xi-api-key", c.apiKey)
+
+	var createResp CreateVoiceResponse
+	_, err = c.do(req, &createResp)
+	if err != nil {
+		return nil, err
+	}
+
+	return &createResp, nil
+}
+
+func (c *Client) GetVoice(ctx context.Context, voiceID string) (*VoiceResponseModel, error) {
+	req, err := c.newRequest(ctx, "GET", fmt.Sprintf("%s/voices?voice_ids=%s", apiBaseURLV2, voiceID), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	var resp GetVoicesV2ResponseModel
+	_, err = c.do(req, &resp)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(resp.Voices) == 0 {
+		return nil, nil // Not found
+	}
+
+	if len(resp.Voices) > 1 {
+		return nil, fmt.Errorf("expected 1 voice, but got %d", len(resp.Voices))
+	}
+
+	return &resp.Voices[0], nil
+}
+
+func (c *Client) DeleteVoice(ctx context.Context, voiceID string) error {
+	req, err := c.newRequest(ctx, "DELETE", fmt.Sprintf("%s/voices/%s", apiBaseURLV1, voiceID), nil)
 	if err != nil {
 		return err
 	}
@@ -147,7 +255,7 @@ type APISchema struct {
 }
 
 func (c *Client) CreateTool(ctx context.Context, tool *Tool) (*Tool, error) {
-	req, err := c.newRequest(ctx, "POST", fmt.Sprintf("%s/tools", apiBaseURL), tool)
+	req, err := c.newRequest(ctx, "POST", fmt.Sprintf("%s/tools/create", apiBaseURLAgents), tool)
 	if err != nil {
 		return nil, err
 	}
@@ -161,7 +269,7 @@ func (c *Client) CreateTool(ctx context.Context, tool *Tool) (*Tool, error) {
 }
 
 func (c *Client) GetTool(ctx context.Context, toolID string) (*Tool, error) {
-	req, err := c.newRequest(ctx, "GET", fmt.Sprintf("%s/tools/%s", apiBaseURL, toolID), nil)
+	req, err := c.newRequest(ctx, "GET", fmt.Sprintf("%s/tools/%s", apiBaseURLAgents, toolID), nil)
 	if err != nil {
 		return nil, err
 	}
@@ -179,7 +287,7 @@ func (c *Client) GetTool(ctx context.Context, toolID string) (*Tool, error) {
 }
 
 func (c *Client) UpdateTool(ctx context.Context, toolID string, tool *Tool) error {
-	req, err := c.newRequest(ctx, "PUT", fmt.Sprintf("%s/tools/%s", apiBaseURL, toolID), tool)
+	req, err := c.newRequest(ctx, "PUT", fmt.Sprintf("%s/tools/%s", apiBaseURLAgents, toolID), tool)
 	if err != nil {
 		return err
 	}
@@ -189,7 +297,7 @@ func (c *Client) UpdateTool(ctx context.Context, toolID string, tool *Tool) erro
 }
 
 func (c *Client) DeleteTool(ctx context.Context, toolID string) error {
-	req, err := c.newRequest(ctx, "DELETE", fmt.Sprintf("%s/tools/%s", apiBaseURL, toolID), nil)
+	req, err := c.newRequest(ctx, "DELETE", fmt.Sprintf("%s/tools/%s", apiBaseURLAgents, toolID), nil)
 	if err != nil {
 		return err
 	}
@@ -231,7 +339,7 @@ type KnowledgeBaseDocumentDetails struct {
 }
 
 func (c *Client) CreateKnowledgeBaseDocumentFromURL(ctx context.Context, doc *KnowledgeBaseDocumentFromURLRequest) (*KnowledgeBaseDocumentCreateResponse, error) {
-	req, err := c.newRequest(ctx, "POST", fmt.Sprintf("%s/knowledge-base/documents/create-from-url", apiBaseURL), doc)
+	req, err := c.newRequest(ctx, "POST", fmt.Sprintf("%s/knowledge-base/documents/create-from-url", apiBaseURLV1), doc)
 	if err != nil {
 		return nil, err
 	}
@@ -245,7 +353,7 @@ func (c *Client) CreateKnowledgeBaseDocumentFromURL(ctx context.Context, doc *Kn
 }
 
 func (c *Client) CreateKnowledgeBaseDocumentFromText(ctx context.Context, doc *KnowledgeBaseDocumentFromTextRequest) (*KnowledgeBaseDocumentCreateResponse, error) {
-	req, err := c.newRequest(ctx, "POST", fmt.Sprintf("%s/knowledge-base/documents/create-from-text", apiBaseURL), doc)
+	req, err := c.newRequest(ctx, "POST", fmt.Sprintf("%s/knowledge-base/documents/create-from-text", apiBaseURLV1), doc)
 	if err != nil {
 		return nil, err
 	}
@@ -286,7 +394,7 @@ func (c *Client) CreateKnowledgeBaseDocumentFromFile(ctx context.Context, name, 
 		return nil, err
 	}
 
-	req, err := http.NewRequestWithContext(ctx, "POST", fmt.Sprintf("%s/knowledge-base/documents/create-from-file", apiBaseURL), body)
+	req, err := http.NewRequestWithContext(ctx, "POST", fmt.Sprintf("%s/knowledge-base/documents/create-from-file", apiBaseURLV1), body)
 	if err != nil {
 		return nil, err
 	}
@@ -303,7 +411,7 @@ func (c *Client) CreateKnowledgeBaseDocumentFromFile(ctx context.Context, name, 
 }
 
 func (c *Client) GetKnowledgeBaseDocument(ctx context.Context, documentID string) (*KnowledgeBaseDocumentDetails, error) {
-	req, err := c.newRequest(ctx, "GET", fmt.Sprintf("%s/knowledge-base/documents/%s", apiBaseURL, documentID), nil)
+	req, err := c.newRequest(ctx, "GET", fmt.Sprintf("%s/knowledge-base/documents/%s", apiBaseURLV1, documentID), nil)
 	if err != nil {
 		return nil, err
 	}
@@ -320,7 +428,7 @@ func (c *Client) GetKnowledgeBaseDocument(ctx context.Context, documentID string
 }
 
 func (c *Client) DeleteKnowledgeBaseDocument(ctx context.Context, documentID string) error {
-	req, err := c.newRequest(ctx, "DELETE", fmt.Sprintf("%s/knowledge-base/documents/%s", apiBaseURL, documentID), nil)
+	req, err := c.newRequest(ctx, "DELETE", fmt.Sprintf("%s/knowledge-base/documents/%s", apiBaseURLV1, documentID), nil)
 	if err != nil {
 		return err
 	}
@@ -329,7 +437,7 @@ func (c *Client) DeleteKnowledgeBaseDocument(ctx context.Context, documentID str
 }
 
 func (c *Client) DeleteAgent(ctx context.Context, agentID string) error {
-	req, err := c.newRequest(ctx, "DELETE", fmt.Sprintf("%s/agents/%s/delete", apiBaseURL, agentID), nil)
+	req, err := c.newRequest(ctx, "DELETE", fmt.Sprintf("%s/agents/%s/delete", apiBaseURLAgents, agentID), nil)
 	if err != nil {
 		return err
 	}

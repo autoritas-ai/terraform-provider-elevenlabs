@@ -21,6 +21,7 @@ func Provider() *schema.Provider {
 			"elevenlabs_agent":                   resourceAgent(),
 			"elevenlabs_tool":                    resourceTool(),
 			"elevenlabs_knowledge_base_document": resourceKnowledgeBaseDocument(),
+			"elevenlabs_voice":                   resourceVoice(),
 		},
 		DataSourcesMap:       map[string]*schema.Resource{},
 		ConfigureContextFunc: providerConfigure,
