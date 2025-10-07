@@ -4,8 +4,6 @@ import (
 	"context"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"net/http"
-	"time"
 )
 
 func Provider() *schema.Provider {
@@ -20,10 +18,11 @@ func Provider() *schema.Provider {
 			},
 		},
 		ResourcesMap: map[string]*schema.Resource{
-			"elevenlabs_agent": resourceAgent(),
-			"elevenlabs_tool":  resourceTool(),
+			"elevenlabs_agent":                   resourceAgent(),
+			"elevenlabs_tool":                    resourceTool(),
+			"elevenlabs_knowledge_base_document": resourceKnowledgeBaseDocument(),
 		},
-		DataSourcesMap: map[string]*schema.Resource{},
+		DataSourcesMap:       map[string]*schema.Resource{},
 		ConfigureContextFunc: providerConfigure,
 	}
 }
