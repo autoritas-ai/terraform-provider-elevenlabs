@@ -3,8 +3,7 @@
 version: 2
 before:
   hooks:
-    # this is just an example and not a requirement for provider building/publis
-hing
+    # this is just an example and not a requirement for provider building/publishing
     - go mod tidy
 builds:
 - env:
@@ -43,13 +42,11 @@ checksum:
 signs:
   - artifacts: checksum
     args:
-      # if you are using this in a GitHub action or some other automated pipelin
-e, you
+      # if you are using this in a GitHub action or some other automated pipeline, you
       # need to pass the batch flag to indicate its not interactive.
       - "--batch"
       - "--local-user"
-      - "{{ .Env.GPG_FINGERPRINT }}" # set this environment variable for your si
-gning key
+      - "{{ .Env.GPG_FINGERPRINT }}" # set this environment variable for your signing key
       - "--output"
       - "${signature}"
       - "--detach-sign"
@@ -58,8 +55,7 @@ release:
   extra_files:
     - glob: 'terraform-registry-manifest.json'
       name_template: 'terraform-provider-{{ .ProjectName }}_{{ .Version }}_manifest.json'
-  # If you want to manually examine the release before its live, uncomment this
-line:
+  # If you want to manually examine the release before its live, uncomment thisline:
   # draft: true
 changelog:
   disable: true
