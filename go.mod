@@ -1,4 +1,4 @@
-module github.com/user/terraform-provider-elevenlabs
+module github.com/autoritas-ai/terraform-provider-elevenlabs
 
 go 1.24.3
 
