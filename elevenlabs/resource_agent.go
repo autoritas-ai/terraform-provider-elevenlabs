@@ -109,6 +109,11 @@ func resourceAgentRead(ctx context.Context, d *schema.ResourceData, m interface{
 		return diag.FromErr(err)
 	}
 
+	if agent == nil {
+		d.SetId("")
+		return nil
+	}
+
 	d.Set("agent_id", agent.AgentID)
 	d.Set("name", agent.Name)
 

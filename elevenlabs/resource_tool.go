@@ -70,7 +70,7 @@ func resourceToolCreate(ctx context.Context, d *schema.ResourceData, m interface
 		return diag.FromErr(err)
 	}
 
-	d.SetId(createdTool.ToolID)
+	d.SetId(createdTool.ID)
 	return resourceToolRead(ctx, d, m)
 }
 
@@ -83,14 +83,19 @@ func resourceToolRead(ctx context.Context, d *schema.ResourceData, m interface{}
 		return diag.FromErr(err)
 	}
 
-	d.Set("tool_id", tool.ToolID)
-	d.Set("name", tool.Name)
-	d.Set("description", tool.Description)
+	if tool == nil {
+		d.SetId("")
+		return nil
+	}
+
+	d.Set("tool_id", tool.ID)
+	d.Set("name", tool.ToolConfig.Name)
+	d.Set("description", tool.ToolConfig.Description)
 
 	apiSchema := make([]map[string]interface{}, 1)
 	apiSchema[0] = map[string]interface{}{
-		"url":    tool.APISchema.URL,
-		"method": tool.APISchema.Method,
+		"url":    tool.ToolConfig.APISchema.URL,
+		"method": tool.ToolConfig.APISchema.Method,
 	}
 
 	if err := d.Set("api_schema", apiSchema); err != nil {

@@ -200,3 +200,67 @@ resource "elevenlabs_voice_settings" "example" {
 *   `style` - (Optional) The style exaggeration of the voice. Defaults to `0.0`.
 *   `use_speaker_boost` - (Optional) Whether to use speaker boost. Defaults to `true`.
 *   `speed` - (Optional) The speed of the voice. Defaults to `1.0`.
+
+---
+
+## Data Sources
+
+### `elevenlabs_voices`
+
+Retrieves a list of available voices, with optional filtering.
+
+#### Example Usage
+
+```hcl
+data "elevenlabs_voices" "premade" {
+  category = "premade"
+  sort     = "name"
+}
+
+output "premade_voice_names" {
+  value = [for v in data.elevenlabs_voices.premade.voices : v.name]
+}
+```
+
+#### Argument Reference
+
+*   `search` - (Optional) A search term to filter voices by.
+*   `sort` - (Optional) The field to sort by (e.g., `name`).
+*   `sort_direction` - (Optional) The direction to sort in (`asc` or `desc`).
+*   `voice_type` - (Optional) The type of voice to filter by (e.g., `personal`, `community`).
+*   `category` - (Optional) The category of the voice to filter by (e.g., `premade`, `cloned`).
+
+#### Attribute Reference
+
+*   `voices` - A list of voices, each with the following attributes:
+    *   `voice_id` - The unique ID of the voice.
+    *   `name` - The name of the voice.
+    *   `description` - The description of the voice.
+    *   `labels` - A map of labels associated with the voice.
+
+---
+
+### `elevenlabs_conversation`
+
+Retrieves information about a specific ElevenLabs conversation.
+
+#### Example Usage
+
+```hcl
+data "elevenlabs_conversation" "example" {
+  conversation_id = "your_conversation_id"
+}
+
+output "conversation_status" {
+  value = data.elevenlabs_conversation.example.status
+}
+```
+
+#### Argument Reference
+
+*   `conversation_id` - (Required) The ID of the conversation to retrieve.
+
+#### Attribute Reference
+
+*   `agent_id` - The ID of the agent associated with the conversation.
+*   `status` - The status of the conversation.
