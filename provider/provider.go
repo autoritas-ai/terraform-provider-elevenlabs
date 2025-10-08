@@ -24,6 +24,7 @@ func Provider() *schema.Provider {
 		},
 		DataSourcesMap:       map[string]*schema.Resource{},
 		ConfigureContextFunc: providerConfigure,
+		Description:          "The ElevenLabs provider allows you to manage resources on the ElevenLabs platform.",
 	}
 }
 
