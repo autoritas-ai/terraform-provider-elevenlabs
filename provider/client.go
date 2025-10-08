@@ -85,8 +85,9 @@ type AgentConfig struct {
 }
 
 type PromptConfig struct {
-	Prompt string `json:"prompt"`
-	LLM    string `json:"llm,omitempty"`
+	Prompt  string   `json:"prompt"`
+	LLM     string   `json:"llm,omitempty"`
+	ToolIDs []string `json:"tool_ids,omitempty"`
 }
 
 func (c *Client) CreateAgent(ctx context.Context, agent *Agent) (*Agent, error) {

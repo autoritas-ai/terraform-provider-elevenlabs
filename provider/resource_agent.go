@@ -56,6 +56,11 @@ func resourceAgent() *schema.Resource {
 													Optional: true,
 													Default:  "gpt-4o-mini",
 												},
+												"tools": {
+													Type:     schema.TypeSet,
+													Optional: true,
+													Elem:     &schema.Schema{Type: schema.TypeString},
+												},
 											},
 										},
 									},
@@ -79,14 +84,21 @@ func resourceAgentCreate(ctx context.Context, d *schema.ResourceData, m interfac
 	promptConfigList := agentConfigData["prompt"].([]interface{})
 	promptConfigData := promptConfigList[0].(map[string]interface{})
 
+	toolSet := promptConfigData["tools"].(*schema.Set)
+	tools := make([]string, len(toolSet.List()))
+	for i, tool := range toolSet.List() {
+		tools[i] = tool.(string)
+	}
+
 	agent := &Agent{
 		Name: d.Get("name").(string),
 		ConversationConfig: ConversationConfig{
 			Agent: AgentConfig{
 				FirstMessage: agentConfigData["first_message"].(string),
 				Prompt: PromptConfig{
-					Prompt: promptConfigData["prompt"].(string),
-					LLM:    promptConfigData["llm"].(string),
+					Prompt:  promptConfigData["prompt"].(string),
+					LLM:     promptConfigData["llm"].(string),
+					ToolIDs: tools,
 				},
 			},
 		},
@@ -125,6 +137,7 @@ func resourceAgentRead(ctx context.Context, d *schema.ResourceData, m interface{
 	promptConfig[0] = map[string]interface{}{
 		"prompt": agent.ConversationConfig.Agent.Prompt.Prompt,
 		"llm":    agent.ConversationConfig.Agent.Prompt.LLM,
+		"tools":  agent.ConversationConfig.Agent.Prompt.ToolIDs,
 	}
 
 	agentConfig[0] = map[string]interface{}{
@@ -155,14 +168,21 @@ func resourceAgentUpdate(ctx context.Context, d *schema.ResourceData, m interfac
 		promptConfigList := agentConfigData["prompt"].([]interface{})
 		promptConfigData := promptConfigList[0].(map[string]interface{})
 
+		toolSet := promptConfigData["tools"].(*schema.Set)
+		tools := make([]string, len(toolSet.List()))
+		for i, tool := range toolSet.List() {
+			tools[i] = tool.(string)
+		}
+
 		agent := &Agent{
 			Name: d.Get("name").(string),
 			ConversationConfig: ConversationConfig{
 				Agent: AgentConfig{
 					FirstMessage: agentConfigData["first_message"].(string),
 					Prompt: PromptConfig{
-						Prompt: promptConfigData["prompt"].(string),
-						LLM:    promptConfigData["llm"].(string),
+						Prompt:  promptConfigData["prompt"].(string),
+						LLM:     promptConfigData["llm"].(string),
+						ToolIDs: tools,
 					},
 				},
 			},
