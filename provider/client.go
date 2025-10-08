@@ -1,4 +1,4 @@
-package elevenlabs
+package provider
 
 import (
 	"bytes"
@@ -70,8 +70,8 @@ func (c *Client) do(req *http.Request, v interface{}) (*http.Response, error) {
 
 // Agent
 type Agent struct {
-	AgentID            string                 `json:"agent_id,omitempty"`
-	Name               string                 `json:"name,omitempty"`
+	AgentID            string             `json:"agent_id,omitempty"`
+	Name               string             `json:"name,omitempty"`
 	ConversationConfig ConversationConfig `json:"conversation_config"`
 }
 
@@ -80,7 +80,7 @@ type ConversationConfig struct {
 }
 
 type AgentConfig struct {
-	FirstMessage string      `json:"first_message,omitempty"`
+	FirstMessage string       `json:"first_message,omitempty"`
 	Prompt       PromptConfig `json:"prompt"`
 }
 
