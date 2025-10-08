@@ -239,28 +239,3 @@ output "premade_voice_names" {
     *   `labels` - A map of labels associated with the voice.
 
 ---
-
-### `elevenlabs_conversation`
-
-Retrieves information about a specific ElevenLabs conversation.
-
-#### Example Usage
-
-```hcl
-data "elevenlabs_conversation" "example" {
-  conversation_id = "your_conversation_id"
-}
-
-output "conversation_status" {
-  value = data.elevenlabs_conversation.example.status
-}
-```
-
-#### Argument Reference
-
-*   `conversation_id` - (Required) The ID of the conversation to retrieve.
-
-#### Attribute Reference
-
-*   `agent_id` - The ID of the agent associated with the conversation.
-*   `status` - The status of the conversation.

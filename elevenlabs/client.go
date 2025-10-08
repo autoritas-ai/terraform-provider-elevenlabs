@@ -68,6 +68,7 @@ func (c *Client) do(req *http.Request, v interface{}) (*http.Response, error) {
 	return resp, nil
 }
 
+// Agent
 type Agent struct {
 	AgentID            string                 `json:"agent_id,omitempty"`
 	Name               string                 `json:"name,omitempty"`
@@ -93,13 +94,9 @@ func (c *Client) CreateAgent(ctx context.Context, agent *Agent) (*Agent, error) 
 	if err != nil {
 		return nil, err
 	}
-
 	var createdAgent Agent
 	_, err = c.do(req, &createdAgent)
-	if err != nil {
-		return nil, err
-	}
-	return &createdAgent, nil
+	return &createdAgent, err
 }
 
 func (c *Client) GetAgent(ctx context.Context, agentID string) (*Agent, error) {
@@ -107,26 +104,37 @@ func (c *Client) GetAgent(ctx context.Context, agentID string) (*Agent, error) {
 	if err != nil {
 		return nil, err
 	}
-
 	var agent Agent
-	_, err = c.do(req, &agent)
+	resp, err := c.do(req, &agent)
 	if err != nil {
 		return nil, err
+	}
+	if resp.StatusCode == http.StatusNotFound {
+		return nil, nil
 	}
 	agent.AgentID = agentID
 	return &agent, nil
 }
 
 func (c *Client) UpdateAgent(ctx context.Context, agentID string, agent *Agent) error {
-	req, err := c.newRequest(ctx, "PUT", fmt.Sprintf("%s/agents/%s/update", apiBaseURL, agentID), agent)
+	req, err := c.newRequest(ctx, "PATCH", fmt.Sprintf("%s/agents/%s", apiBaseURL, agent), agent)
 	if err != nil {
 		return err
 	}
-
 	_, err = c.do(req, nil)
 	return err
 }
 
+func (c *Client) DeleteAgent(ctx context.Context, agentID string) error {
+	req, err := c.newRequest(ctx, "DELETE", fmt.Sprintf("%s/agents/%s", apiBaseURL, agentID), nil)
+	if err != nil {
+		return err
+	}
+	_, err = c.do(req, nil)
+	return err
+}
+
+// Tool
 type Tool struct {
 	Name        string    `json:"name"`
 	Description string    `json:"description,omitempty"`
@@ -153,13 +161,9 @@ func (c *Client) CreateTool(ctx context.Context, tool *Tool) (*ToolResponse, err
 	if err != nil {
 		return nil, err
 	}
-
 	var createdTool ToolResponse
 	_, err = c.do(req, &createdTool)
-	if err != nil {
-		return nil, err
-	}
-	return &createdTool, nil
+	return &createdTool, err
 }
 
 func (c *Client) GetTool(ctx context.Context, toolID string) (*ToolResponse, error) {
@@ -167,7 +171,6 @@ func (c *Client) GetTool(ctx context.Context, toolID string) (*ToolResponse, err
 	if err != nil {
 		return nil, err
 	}
-
 	var tool ToolResponse
 	resp, err := c.do(req, &tool)
 	if err != nil {
@@ -185,7 +188,6 @@ func (c *Client) UpdateTool(ctx context.Context, toolID string, tool *Tool) erro
 	if err != nil {
 		return err
 	}
-
 	_, err = c.do(req, nil)
 	return err
 }
@@ -195,17 +197,6 @@ func (c *Client) DeleteTool(ctx context.Context, toolID string) error {
 	if err != nil {
 		return err
 	}
-
-	_, err = c.do(req, nil)
-	return err
-}
-
-func (c *Client) DeleteAgent(ctx context.Context, agentID string) error {
-	req, err := c.newRequest(ctx, "DELETE", fmt.Sprintf("%s/agents/%s", apiBaseURL, agentID), nil)
-	if err != nil {
-		return err
-	}
-
 	_, err = c.do(req, nil)
 	return err
 }
