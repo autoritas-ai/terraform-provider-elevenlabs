@@ -1,5 +1,6 @@
 # Visit https://goreleaser.com for documentation on how to customize this
 # behavior.
+project_name: terraform-provider-elevenlabs
 version: 2
 before:
   hooks:
@@ -29,7 +30,7 @@ builds:
   ignore:
     - goos: darwin
       goarch: '386'
-  binary: 'terraform-provider-{{ .ProjectName }}_v{{ .Version }}'
+  binary: '{{ .ProjectName }}_v{{ .Version }}'
 archives:
 - format: zip
   name_template: '{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}'
@@ -54,7 +55,7 @@ signs:
 release:
   extra_files:
     - glob: 'terraform-registry-manifest.json'
-      name_template: 'terraform-provider-{{ .ProjectName }}_{{ .Version }}_manifest.json'
+      name_template: '{{ .ProjectName }}_{{ .Version }}_manifest.json'
   # If you want to manually examine the release before its live, uncomment thisline:
   # draft: true
 changelog:
