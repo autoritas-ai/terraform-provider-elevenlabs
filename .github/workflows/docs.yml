@@ -8,6 +8,13 @@ on:
 jobs:
   docs:
     runs-on: ubuntu-latest
+    permissions:
+      # This is required to allow the Action to push to the repository
+      contents: write
+      
+    # Corrected 'if' condition using the standard expression syntax
+    if: ${{ !contains(github.event.head_commit.message, '[ci skip]') }}
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
@@ -34,5 +41,6 @@ jobs:
             echo "No changes to commit."
             exit 0
           fi
-          git commit -m "docs: generate documentation"
+          # Add [ci skip] to the commit message to prevent the workflow from re-running
+          git commit -m "docs: generate documentation [ci skip]"
           git push
