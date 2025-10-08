@@ -16,45 +16,54 @@ func resourceAgent() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
+		Description: "Provides a resource to manage an agent on ElevenLabs.",
 		Schema: map[string]*schema.Schema{
 			"agent_id": {
-				Type:     schema.TypeString,
-				Computed: true,
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "The ID of the agent.",
 			},
 			"name": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "The name of the agent.",
 			},
 			"conversation_config": {
-				Type:     schema.TypeList,
-				Required: true,
-				MaxItems: 1,
+				Type:        schema.TypeList,
+				Required:    true,
+				MaxItems:    1,
+				Description: "Defines the conversation configuration for the agent.",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"agent": {
-							Type:     schema.TypeList,
-							Required: true,
-							MaxItems: 1,
+							Type:        schema.TypeList,
+							Required:    true,
+							MaxItems:    1,
+							Description: "Configures the agent's behavior.",
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"first_message": {
-										Type:     schema.TypeString,
-										Optional: true,
+										Type:        schema.TypeString,
+										Optional:    true,
+										Description: "The initial message the agent sends.",
 									},
 									"prompt": {
-										Type:     schema.TypeList,
-										Required: true,
-										MaxItems: 1,
+										Type:        schema.TypeList,
+										Required:    true,
+										MaxItems:    1,
+										Description: "Defines the agent's prompt.",
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"prompt": {
-													Type:     schema.TypeString,
-													Required: true,
+													Type:        schema.TypeString,
+													Required:    true,
+													Description: "The system prompt for the agent.",
 												},
 												"llm": {
-													Type:     schema.TypeString,
-													Optional: true,
-													Default:  "gpt-4o-mini",
+													Type:        schema.TypeString,
+													Optional:    true,
+													Default:     "gpt-4o-mini",
+													Description: "The language model to use for the agent. Defaults to `gpt-4o-mini`.",
 												},
 											},
 										},

@@ -16,33 +16,40 @@ func resourceTool() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
+		Description: "Provides a resource to manage a tool on ElevenLabs.",
 		Schema: map[string]*schema.Schema{
 			"tool_id": {
-				Type:     schema.TypeString,
-				Computed: true,
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "The ID of the tool.",
 			},
 			"name": {
-				Type:     schema.TypeString,
-				Required: true,
+				Type:        schema.TypeString,
+				Required:    true,
+				Description: "The name of the tool.",
 			},
 			"description": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "A description of the tool.",
 			},
 			"api_schema": {
-				Type:     schema.TypeList,
-				Required: true,
-				MaxItems: 1,
+				Type:        schema.TypeList,
+				Required:    true,
+				MaxItems:    1,
+				Description: "The API schema for the tool.",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"url": {
-							Type:     schema.TypeString,
-							Required: true,
+							Type:        schema.TypeString,
+							Required:    true,
+							Description: "The URL of the API endpoint.",
 						},
 						"method": {
-							Type:     schema.TypeString,
-							Optional: true,
-							Default:  "GET",
+							Type:        schema.TypeString,
+							Optional:    true,
+							Default:     "GET",
+							Description: "The HTTP method to use for the API endpoint. Defaults to `GET`.",
 						},
 					},
 				},
