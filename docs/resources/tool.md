@@ -43,18 +43,43 @@ Required:
 Optional:
 
 - `method` (String)
-- `path_params_schema` (Map of String)
+- `path_params_schema` (Block List) (see [below for nested schema](#nestedblock--api_schema--path_params_schema))
 - `query_params_schema` (Block List, Max: 1) (see [below for nested schema](#nestedblock--api_schema--query_params_schema))
 - `request_body_schema` (String) The schema for the request body, specified as a JSON string. It is recommended to use the `jsonencode` function to construct this value.
 - `request_headers` (Map of String)
+
+<a id="nestedblock--api_schema--path_params_schema"></a>
+### Nested Schema for `api_schema.path_params_schema`
+
+Required:
+
+- `name` (String)
+- `type` (String)
+
+Optional:
+
+- `description` (String)
+
 
 <a id="nestedblock--api_schema--query_params_schema"></a>
 ### Nested Schema for `api_schema.query_params_schema`
 
 Required:
 
-- `properties` (Map of String)
+- `properties` (Block List, Min: 1) (see [below for nested schema](#nestedblock--api_schema--query_params_schema--properties))
 
 Optional:
 
 - `required` (List of String)
+
+<a id="nestedblock--api_schema--query_params_schema--properties"></a>
+### Nested Schema for `api_schema.query_params_schema.properties`
+
+Required:
+
+- `name` (String)
+- `type` (String)
+
+Optional:
+
+- `description` (String)
