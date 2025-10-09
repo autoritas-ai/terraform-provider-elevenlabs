@@ -136,10 +136,33 @@ func (c *Client) DeleteAgent(ctx context.Context, agentID string) error {
 }
 
 // Tool
+type LiteralJsonSchemaProperty struct {
+	Type        string `json:"type"`
+	Description string `json:"description,omitempty"`
+}
+
+type QueryParamsJsonSchema struct {
+	Properties map[string]LiteralJsonSchemaProperty `json:"properties"`
+	Required   []string                             `json:"required,omitempty"`
+}
+
+type APISchema struct {
+	URL               string                               `json:"url"`
+	Method            string                               `json:"method,omitempty"`
+	PathParamsSchema  map[string]LiteralJsonSchemaProperty `json:"path_params_schema,omitempty"`
+	QueryParamsSchema *QueryParamsJsonSchema               `json:"query_params_schema,omitempty"`
+	RequestBodySchema json.RawMessage                      `json:"request_body_schema,omitempty"`
+	RequestHeaders    map[string]string                    `json:"request_headers,omitempty"`
+}
+
 type Tool struct {
-	Name        string    `json:"name"`
-	Description string    `json:"description,omitempty"`
-	APISchema   APISchema `json:"api_schema"`
+	Name                 string     `json:"name"`
+	Description          string     `json:"description,omitempty"`
+	APISchema            *APISchema `json:"api_schema,omitempty"`
+	Type                 string     `json:"type,omitempty"`
+	ResponseTimeoutSecs  int        `json:"response_timeout_secs,omitempty"`
+	DisableInterruptions bool       `json:"disable_interruptions,omitempty"`
+	ForcePreToolSpeech   bool       `json:"force_pre_tool_speech,omitempty"`
 }
 
 type ToolRequest struct {
@@ -149,11 +172,6 @@ type ToolRequest struct {
 type ToolResponse struct {
 	ID         string `json:"id"`
 	ToolConfig Tool   `json:"tool_config"`
-}
-
-type APISchema struct {
-	URL    string `json:"url"`
-	Method string `json:"method,omitempty"`
 }
 
 func (c *Client) CreateTool(ctx context.Context, tool *Tool) (*ToolResponse, error) {
