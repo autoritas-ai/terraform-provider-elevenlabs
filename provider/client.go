@@ -69,25 +69,45 @@ func (c *Client) do(req *http.Request, v interface{}) (*http.Response, error) {
 }
 
 // Agent
+type TTSConfig struct {
+	VoiceID         string   `json:"voice_id,omitempty"`
+	Stability       *float64 `json:"stability,omitempty"`
+	Speed           *float64 `json:"speed,omitempty"`
+	SimilarityBoost *float64 `json:"similarity_boost,omitempty"`
+}
+
 type Agent struct {
-	AgentID            string             `json:"agent_id,omitempty"`
-	Name               string             `json:"name,omitempty"`
-	ConversationConfig ConversationConfig `json:"conversation_config"`
+	AgentID            string              `json:"agent_id,omitempty"`
+	Name               string              `json:"name,omitempty"`
+	ConversationConfig *ConversationConfig `json:"conversation_config,omitempty"`
+	Tags               []string            `json:"tags,omitempty"`
 }
 
 type ConversationConfig struct {
-	Agent AgentConfig `json:"agent"`
+	Agent *AgentConfig `json:"agent,omitempty"`
+	TTS   *TTSConfig   `json:"tts,omitempty"`
 }
 
 type AgentConfig struct {
-	FirstMessage string       `json:"first_message,omitempty"`
-	Prompt       PromptConfig `json:"prompt"`
+	FirstMessage string        `json:"first_message,omitempty"`
+	Language     string        `json:"language,omitempty"`
+	Prompt       *PromptConfig `json:"prompt,omitempty"`
+}
+
+type KnowledgeBaseLocator struct {
+	Type      string `json:"type"`
+	Name      string `json:"name"`
+	ID        string `json:"id"`
+	UsageMode string `json:"usage_mode,omitempty"`
 }
 
 type PromptConfig struct {
-	Prompt  string   `json:"prompt"`
-	LLM     string   `json:"llm,omitempty"`
-	ToolIDs []string `json:"tool_ids,omitempty"`
+	Prompt        string                  `json:"prompt,omitempty"`
+	LLM           string                  `json:"llm,omitempty"`
+	ToolIDs       []string                `json:"tool_ids,omitempty"`
+	Temperature   *float64                `json:"temperature,omitempty"`
+	MaxTokens     *int                    `json:"max_tokens,omitempty"`
+	KnowledgeBase []*KnowledgeBaseLocator `json:"knowledge_base,omitempty"`
 }
 
 func (c *Client) CreateAgent(ctx context.Context, agent *Agent) (*Agent, error) {
@@ -118,7 +138,7 @@ func (c *Client) GetAgent(ctx context.Context, agentID string) (*Agent, error) {
 }
 
 func (c *Client) UpdateAgent(ctx context.Context, agentID string, agent *Agent) error {
-	req, err := c.newRequest(ctx, "PATCH", fmt.Sprintf("%s/agents/%s", apiBaseURL, agent), agent)
+	req, err := c.newRequest(ctx, "PATCH", fmt.Sprintf("%s/agents/%s", apiBaseURL, agentID), agent)
 	if err != nil {
 		return err
 	}
