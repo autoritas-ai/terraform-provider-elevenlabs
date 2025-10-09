@@ -64,10 +64,14 @@ func resourceTool() *schema.Resource {
 							Default:  "GET",
 						},
 						"path_params_schema": {
-							Type:     schema.TypeMap,
+							Type:     schema.TypeList,
 							Optional: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
+									"name": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
 									"type": {
 										Type:     schema.TypeString,
 										Required: true,
@@ -86,10 +90,14 @@ func resourceTool() *schema.Resource {
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"properties": {
-										Type:     schema.TypeMap,
+										Type:     schema.TypeList,
 										Required: true,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
+												"name": {
+													Type:     schema.TypeString,
+													Required: true,
+												},
 												"type": {
 													Type:     schema.TypeString,
 													Required: true,
@@ -152,11 +160,12 @@ func resourceToolCreate(ctx context.Context, d *schema.ResourceData, m interface
 			Method: apiSchemaData["method"].(string),
 		}
 
-		if v, ok := apiSchemaData["path_params_schema"].(map[string]interface{}); ok && len(v) > 0 {
+		if v, ok := apiSchemaData["path_params_schema"].([]interface{}); ok && len(v) > 0 {
 			apiSchema.PathParamsSchema = make(map[string]LiteralJsonSchemaProperty)
-			for key, val := range v {
-				param := val.(map[string]interface{})
-				apiSchema.PathParamsSchema[key] = LiteralJsonSchemaProperty{
+			for _, item := range v {
+				param := item.(map[string]interface{})
+				name := param["name"].(string)
+				apiSchema.PathParamsSchema[name] = LiteralJsonSchemaProperty{
 					Type:        param["type"].(string),
 					Description: param["description"].(string),
 				}
@@ -168,10 +177,11 @@ func resourceToolCreate(ctx context.Context, d *schema.ResourceData, m interface
 			queryParamsSchema := &QueryParamsJsonSchema{
 				Properties: make(map[string]LiteralJsonSchemaProperty),
 			}
-			if props, ok := queryData["properties"].(map[string]interface{}); ok {
-				for key, val := range props {
-					prop := val.(map[string]interface{})
-					queryParamsSchema.Properties[key] = LiteralJsonSchemaProperty{
+			if props, ok := queryData["properties"].([]interface{}); ok {
+				for _, item := range props {
+					prop := item.(map[string]interface{})
+					name := prop["name"].(string)
+					queryParamsSchema.Properties[name] = LiteralJsonSchemaProperty{
 						Type:        prop["type"].(string),
 						Description: prop["description"].(string),
 					}
@@ -244,26 +254,28 @@ func resourceToolRead(ctx context.Context, d *schema.ResourceData, m interface{}
 		apiSchema["method"] = tool.ToolConfig.APISchema.Method
 
 		if tool.ToolConfig.APISchema.PathParamsSchema != nil {
-			pathParams := make(map[string]interface{})
+			pathParamsList := make([]interface{}, 0, len(tool.ToolConfig.APISchema.PathParamsSchema))
 			for k, v := range tool.ToolConfig.APISchema.PathParamsSchema {
-				pathParams[k] = map[string]interface{}{
-					"type":        v.Type,
-					"description": v.Description,
-				}
+				param := make(map[string]interface{})
+				param["name"] = k
+				param["type"] = v.Type
+				param["description"] = v.Description
+				pathParamsList = append(pathParamsList, param)
 			}
-			apiSchema["path_params_schema"] = pathParams
+			apiSchema["path_params_schema"] = pathParamsList
 		}
 
 		if tool.ToolConfig.APISchema.QueryParamsSchema != nil {
 			queryParams := make(map[string]interface{})
-			props := make(map[string]interface{})
+			propsList := make([]interface{}, 0, len(tool.ToolConfig.APISchema.QueryParamsSchema.Properties))
 			for k, v := range tool.ToolConfig.APISchema.QueryParamsSchema.Properties {
-				props[k] = map[string]interface{}{
-					"type":        v.Type,
-					"description": v.Description,
-				}
+				prop := make(map[string]interface{})
+				prop["name"] = k
+				prop["type"] = v.Type
+				prop["description"] = v.Description
+				propsList = append(propsList, prop)
 			}
-			queryParams["properties"] = props
+			queryParams["properties"] = propsList
 			queryParams["required"] = tool.ToolConfig.APISchema.QueryParamsSchema.Required
 			apiSchema["query_params_schema"] = []interface{}{queryParams}
 		}
@@ -310,11 +322,12 @@ func resourceToolUpdate(ctx context.Context, d *schema.ResourceData, m interface
 				Method: apiSchemaData["method"].(string),
 			}
 
-			if v, ok := apiSchemaData["path_params_schema"].(map[string]interface{}); ok && len(v) > 0 {
+			if v, ok := apiSchemaData["path_params_schema"].([]interface{}); ok && len(v) > 0 {
 				apiSchema.PathParamsSchema = make(map[string]LiteralJsonSchemaProperty)
-				for key, val := range v {
-					param := val.(map[string]interface{})
-					apiSchema.PathParamsSchema[key] = LiteralJsonSchemaProperty{
+				for _, item := range v {
+					param := item.(map[string]interface{})
+					name := param["name"].(string)
+					apiSchema.PathParamsSchema[name] = LiteralJsonSchemaProperty{
 						Type:        param["type"].(string),
 						Description: param["description"].(string),
 					}
@@ -326,10 +339,11 @@ func resourceToolUpdate(ctx context.Context, d *schema.ResourceData, m interface
 				queryParamsSchema := &QueryParamsJsonSchema{
 					Properties: make(map[string]LiteralJsonSchemaProperty),
 				}
-				if props, ok := queryData["properties"].(map[string]interface{}); ok {
-					for key, val := range props {
-						prop := val.(map[string]interface{})
-						queryParamsSchema.Properties[key] = LiteralJsonSchemaProperty{
+				if props, ok := queryData["properties"].([]interface{}); ok {
+					for _, item := range props {
+						prop := item.(map[string]interface{})
+						name := prop["name"].(string)
+						queryParamsSchema.Properties[name] = LiteralJsonSchemaProperty{
 							Type:        prop["type"].(string),
 							Description: prop["description"].(string),
 						}
