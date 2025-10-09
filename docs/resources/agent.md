@@ -56,3 +56,4 @@ Required:
 Optional:
 
 - `llm` (String)
+- `tools` (Set of String)
