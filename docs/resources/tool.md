@@ -17,12 +17,16 @@ description: |-
 
 ### Required
 
-- `api_schema` (Block List, Min: 1, Max: 1) (see [below for nested schema](#nestedblock--api_schema))
 - `name` (String)
 
 ### Optional
 
+- `api_schema` (Block List, Max: 1) (see [below for nested schema](#nestedblock--api_schema))
 - `description` (String)
+- `disable_interruptions` (Boolean)
+- `force_pre_tool_speech` (Boolean)
+- `response_timeout_secs` (Number)
+- `type` (String)
 
 ### Read-Only
 
@@ -39,3 +43,18 @@ Required:
 Optional:
 
 - `method` (String)
+- `path_params_schema` (Map of String)
+- `query_params_schema` (Block List, Max: 1) (see [below for nested schema](#nestedblock--api_schema--query_params_schema))
+- `request_body_schema` (String) The schema for the request body, specified as a JSON string. It is recommended to use the `jsonencode` function to construct this value.
+- `request_headers` (Map of String)
+
+<a id="nestedblock--api_schema--query_params_schema"></a>
+### Nested Schema for `api_schema.query_params_schema`
+
+Required:
+
+- `properties` (Map of String)
+
+Optional:
+
+- `required` (List of String)
