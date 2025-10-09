@@ -22,6 +22,7 @@ description: |-
 ### Optional
 
 - `name` (String)
+- `tags` (Set of String)
 
 ### Read-Only
 
@@ -35,6 +36,10 @@ Required:
 
 - `agent` (Block List, Min: 1, Max: 1) (see [below for nested schema](#nestedblock--conversation_config--agent))
 
+Optional:
+
+- `tts` (Block List, Max: 1) (see [below for nested schema](#nestedblock--conversation_config--tts))
+
 <a id="nestedblock--conversation_config--agent"></a>
 ### Nested Schema for `conversation_config.agent`
 
@@ -45,6 +50,7 @@ Required:
 Optional:
 
 - `first_message` (String)
+- `language` (String)
 
 <a id="nestedblock--conversation_config--agent--prompt"></a>
 ### Nested Schema for `conversation_config.agent.prompt`
@@ -55,5 +61,34 @@ Required:
 
 Optional:
 
+- `knowledge_base` (Block List) (see [below for nested schema](#nestedblock--conversation_config--agent--prompt--knowledge_base))
 - `llm` (String)
+- `max_tokens` (Number)
+- `temperature` (Number)
 - `tools` (Set of String)
+
+<a id="nestedblock--conversation_config--agent--prompt--knowledge_base"></a>
+### Nested Schema for `conversation_config.agent.prompt.knowledge_base`
+
+Required:
+
+- `id` (String)
+- `name` (String)
+- `type` (String)
+
+Optional:
+
+- `usage_mode` (String)
+
+
+
+
+<a id="nestedblock--conversation_config--tts"></a>
+### Nested Schema for `conversation_config.tts`
+
+Optional:
+
+- `similarity_boost` (Number)
+- `speed` (Number)
+- `stability` (Number)
+- `voice_id` (String)
