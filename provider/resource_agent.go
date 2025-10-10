@@ -103,29 +103,11 @@ func resourceAgent() *schema.Resource {
 													Type:     schema.TypeInt,
 													Optional: true,
 												},
-												"knowledge_base": {
-													Type:     schema.TypeList,
+												"knowledge_base_document_ids": {
+													Type:     schema.TypeSet,
 													Optional: true,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															"type": {
-																Type:     schema.TypeString,
-																Required: true,
-															},
-															"name": {
-																Type:     schema.TypeString,
-																Required: true,
-															},
-															"id": {
-																Type:     schema.TypeString,
-																Required: true,
-															},
-															"usage_mode": {
-																Type:     schema.TypeString,
-																Optional: true,
-															},
-														},
-													},
+													Elem:     &schema.Schema{Type: schema.TypeString},
+													Description: "A set of knowledge base document IDs to be used by the agent.",
 												},
 											},
 										},
@@ -208,15 +190,11 @@ func resourceAgentCreate(ctx context.Context, d *schema.ResourceData, m interfac
 					}
 					promptConfig.ToolIDs = tools
 				}
-				if kbList, ok := promptData["knowledge_base"].([]interface{}); ok && len(kbList) > 0 {
-					kbs := make([]*KnowledgeBaseLocator, len(kbList))
-					for i, item := range kbList {
-						kbData := item.(map[string]interface{})
+				if kbSet, ok := promptData["knowledge_base_document_ids"].(*schema.Set); ok && kbSet.Len() > 0 {
+					kbs := make([]*KnowledgeBaseLocator, kbSet.Len())
+					for i, item := range kbSet.List() {
 						kbs[i] = &KnowledgeBaseLocator{
-							Type:      kbData["type"].(string),
-							Name:      kbData["name"].(string),
-							ID:        kbData["id"].(string),
-							UsageMode: kbData["usage_mode"].(string),
+							ID: item.(string),
 						}
 					}
 					promptConfig.KnowledgeBase = kbs
@@ -292,16 +270,11 @@ func resourceAgentRead(ctx context.Context, d *schema.ResourceData, m interface{
 					promptMap["max_tokens"] = *agent.ConversationConfig.Agent.Prompt.MaxTokens
 				}
 				if agent.ConversationConfig.Agent.Prompt.KnowledgeBase != nil {
-					kbList := make([]interface{}, len(agent.ConversationConfig.Agent.Prompt.KnowledgeBase))
+					kbIDs := make([]string, len(agent.ConversationConfig.Agent.Prompt.KnowledgeBase))
 					for i, kb := range agent.ConversationConfig.Agent.Prompt.KnowledgeBase {
-						kbMap := make(map[string]interface{})
-						kbMap["type"] = kb.Type
-						kbMap["name"] = kb.Name
-						kbMap["id"] = kb.ID
-						kbMap["usage_mode"] = kb.UsageMode
-						kbList[i] = kbMap
+						kbIDs[i] = kb.ID
 					}
-					promptMap["knowledge_base"] = kbList
+					promptMap["knowledge_base_document_ids"] = kbIDs
 				}
 				agentConfigMap["prompt"] = []interface{}{promptMap}
 			}
@@ -386,15 +359,11 @@ func resourceAgentUpdate(ctx context.Context, d *schema.ResourceData, m interfac
 						}
 						promptConfig.ToolIDs = tools
 					}
-					if kbList, ok := promptData["knowledge_base"].([]interface{}); ok && len(kbList) > 0 {
-						kbs := make([]*KnowledgeBaseLocator, len(kbList))
-						for i, item := range kbList {
-							kbData := item.(map[string]interface{})
+					if kbSet, ok := promptData["knowledge_base_document_ids"].(*schema.Set); ok && kbSet.Len() > 0 {
+						kbs := make([]*KnowledgeBaseLocator, kbSet.Len())
+						for i, item := range kbSet.List() {
 							kbs[i] = &KnowledgeBaseLocator{
-								Type:      kbData["type"].(string),
-								Name:      kbData["name"].(string),
-								ID:        kbData["id"].(string),
-								UsageMode: kbData["usage_mode"].(string),
+								ID: item.(string),
 							}
 						}
 						promptConfig.KnowledgeBase = kbs

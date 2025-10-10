@@ -5,8 +5,12 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"io/ioutil"
+	"mime/multipart"
 	"net/http"
+	"os"
+	"path/filepath"
 	"time"
 )
 
@@ -95,8 +99,8 @@ type AgentConfig struct {
 }
 
 type KnowledgeBaseLocator struct {
-	Type      string `json:"type"`
-	Name      string `json:"name"`
+	Type      string `json:"type,omitempty"`
+	Name      string `json:"name,omitempty"`
 	ID        string `json:"id"`
 	UsageMode string `json:"usage_mode,omitempty"`
 }
@@ -139,6 +143,121 @@ func (c *Client) GetAgent(ctx context.Context, agentID string) (*Agent, error) {
 
 func (c *Client) UpdateAgent(ctx context.Context, agentID string, agent *Agent) error {
 	req, err := c.newRequest(ctx, "PATCH", fmt.Sprintf("%s/agents/%s", apiBaseURL, agentID), agent)
+	if err != nil {
+		return err
+	}
+	_, err = c.do(req, nil)
+	return err
+}
+
+// Knowledge Base
+type KnowledgeBaseDocumentMetadata struct {
+	CreatedAt      int `json:"created_at_unix_secs"`
+	LastUpdatedAt  int `json:"last_updated_at_unix_secs"`
+	SizeBytes    int `json:"size_bytes"`
+}
+
+type KnowledgeBaseDocument struct {
+	ID         string                         `json:"id"`
+	Name       string                         `json:"name"`
+	Metadata   *KnowledgeBaseDocumentMetadata `json:"metadata"`
+	Type       string                         `json:"type"`
+	URL        string                         `json:"url,omitempty"`
+}
+
+type AddKnowledgeBaseResponse struct {
+	ID   string `json:"id"`
+	Name string `json:"name"`
+}
+
+func (c *Client) CreateKnowledgeBaseDocumentFromFile(ctx context.Context, name, filePath string) (*AddKnowledgeBaseResponse, error) {
+	file, err := os.Open(filePath)
+	if err != nil {
+		return nil, err
+	}
+	defer file.Close()
+
+	var requestBody bytes.Buffer
+	writer := multipart.NewWriter(&requestBody)
+
+	part, err := writer.CreateFormFile("file", filepath.Base(filePath))
+	if err != nil {
+		return nil, err
+	}
+	_, err = io.Copy(part, file)
+	if err != nil {
+		return nil, err
+	}
+
+	err = writer.WriteField("name", name)
+	if err != nil {
+		return nil, err
+	}
+
+	err = writer.Close()
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequestWithContext(ctx, "POST", fmt.Sprintf("%s/knowledge-base/file", apiBaseURL), &requestBody)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Set("Content-Type", writer.FormDataContentType())
+	req.Header.Set("xi-api-key", c.apiKey)
+
+	var resp AddKnowledgeBaseResponse
+	_, err = c.do(req, &resp)
+	return &resp, err
+}
+
+func (c *Client) CreateKnowledgeBaseDocumentFromURL(ctx context.Context, name, url string) (*AddKnowledgeBaseResponse, error) {
+	body := map[string]string{
+		"name": name,
+		"url":  url,
+	}
+	req, err := c.newRequest(ctx, "POST", fmt.Sprintf("%s/knowledge-base/url", apiBaseURL), body)
+	if err != nil {
+		return nil, err
+	}
+	var resp AddKnowledgeBaseResponse
+	_, err = c.do(req, &resp)
+	return &resp, err
+}
+
+func (c *Client) CreateKnowledgeBaseDocumentFromText(ctx context.Context, name, textContent string) (*AddKnowledgeBaseResponse, error) {
+	body := map[string]string{
+		"name":         name,
+		"text_content": textContent,
+	}
+	req, err := c.newRequest(ctx, "POST", fmt.Sprintf("%s/knowledge-base/text", apiBaseURL), body)
+	if err != nil {
+		return nil, err
+	}
+	var resp AddKnowledgeBaseResponse
+	_, err = c.do(req, &resp)
+	return &resp, err
+}
+
+func (c *Client) GetKnowledgeBaseDocument(ctx context.Context, documentID string) (*KnowledgeBaseDocument, error) {
+	req, err := c.newRequest(ctx, "GET", fmt.Sprintf("%s/knowledge-base/%s", apiBaseURL, documentID), nil)
+	if err != nil {
+		return nil, err
+	}
+	var doc KnowledgeBaseDocument
+	resp, err := c.do(req, &doc)
+	if err != nil {
+		return nil, err
+	}
+	if resp.StatusCode == http.StatusNotFound {
+		return nil, nil
+	}
+	return &doc, nil
+}
+
+func (c *Client) DeleteKnowledgeBaseDocument(ctx context.Context, documentID string) error {
+	req, err := c.newRequest(ctx, "DELETE", fmt.Sprintf("%s/knowledge-base/%s", apiBaseURL, documentID), nil)
 	if err != nil {
 		return err
 	}

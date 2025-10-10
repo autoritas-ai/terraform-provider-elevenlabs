@@ -61,25 +61,11 @@ Required:
 
 Optional:
 
-- `knowledge_base` (Block List) (see [below for nested schema](#nestedblock--conversation_config--agent--prompt--knowledge_base))
+- `knowledge_base_document_ids` (Set of String) A set of knowledge base document IDs to be used by the agent.
 - `llm` (String)
 - `max_tokens` (Number)
 - `temperature` (Number)
 - `tools` (Set of String)
-
-<a id="nestedblock--conversation_config--agent--prompt--knowledge_base"></a>
-### Nested Schema for `conversation_config.agent.prompt.knowledge_base`
-
-Required:
-
-- `id` (String)
-- `name` (String)
-- `type` (String)
-
-Optional:
-
-- `usage_mode` (String)
-
 
 
 
